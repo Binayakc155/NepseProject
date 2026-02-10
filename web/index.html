@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Nepse Prediction Dashboard</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Space+Grotesk:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="hero">
+        <div class="hero-text">
+          <p class="eyebrow">Nepse ML</p>
+          <h1>Prediction Dashboard</h1>
+          <p class="subtitle">
+            Select a stock to view predicted open, high, low, close and the
+            bullish or bearish signal.
+          </p>
+        </div>
+        <div class="hero-panel">
+          <div class="chip">Model</div>
+          <div class="model-toggle" role="tablist" aria-label="Model selection">
+            <button class="toggle active" data-model="LSTM" role="tab">LSTM</button>
+            <button class="toggle" data-model="XGBoost" role="tab">XGBoost</button>
+            <button class="toggle" data-model="Ensemble" role="tab">Ensemble</button>
+          </div>
+          <label class="select-label" for="symbol-select">Stock</label>
+          <div class="select-wrap">
+            <select id="symbol-select"></select>
+          </div>
+        </div>
+      </header>
+
+      <main class="content">
+        <section class="summary">
+          <div class="summary-card">
+            <p class="label">Signal</p>
+            <h2 id="signal-text">--</h2>
+            <p class="muted" id="signal-desc">--</p>
+          </div>
+          <div class="summary-card">
+            <p class="label">Predicted Close</p>
+            <h2 id="pred-close">--</h2>
+            <p class="muted" id="pred-change">--</p>
+          </div>
+          <div class="summary-card">
+            <p class="label">Prediction Date</p>
+            <h2 id="pred-date">--</h2>
+            <p class="muted" id="pred-model">--</p>
+          </div>
+        </section>
+
+        <section class="grid">
+          <div class="metric-card">
+            <p class="label">Open</p>
+            <h3 id="pred-open">--</h3>
+          </div>
+          <div class="metric-card">
+            <p class="label">Day High</p>
+            <h3 id="pred-high">--</h3>
+          </div>
+          <div class="metric-card">
+            <p class="label">Day Low</p>
+            <h3 id="pred-low">--</h3>
+          </div>
+          <div class="metric-card">
+            <p class="label">Close</p>
+            <h3 id="pred-close-2">--</h3>
+          </div>
+        </section>
+      </main>
+
+      <footer class="footer">
+        <p>
+          Update the data by running <span class="code">python scripts/export_predictions.py</span>
+          and reload this page.
+        </p>
+      </footer>
+    </div>
+
+    <script src="app.js"></script>
+  </body>
+</html>

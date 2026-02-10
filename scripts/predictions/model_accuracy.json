@@ -1,0 +1,122 @@
+{
+  "NEPSE": {
+    "lstm_mae": 343.7503,
+    "xgboost_mae": 245.5935,
+    "better_model": "XGBoost",
+    "accuracy_diff": 98.1568
+  },
+  "NABIL": {
+    "lstm_mae": 21.0315,
+    "xgboost_mae": 44.2335,
+    "better_model": "LSTM",
+    "accuracy_diff": 23.202
+  },
+  "NICA": {
+    "lstm_mae": 41.412,
+    "xgboost_mae": 79.4845,
+    "better_model": "LSTM",
+    "accuracy_diff": 38.0726
+  },
+  "SBI": {
+    "lstm_mae": 32.3839,
+    "xgboost_mae": 89.259,
+    "better_model": "LSTM",
+    "accuracy_diff": 56.8751
+  },
+  "EBL": {
+    "lstm_mae": 47.3423,
+    "xgboost_mae": 73.218,
+    "better_model": "LSTM",
+    "accuracy_diff": 25.8757
+  },
+  "KBL": {
+    "lstm_mae": 15.1225,
+    "xgboost_mae": 16.3108,
+    "better_model": "LSTM",
+    "accuracy_diff": 1.1882
+  },
+  "ADBL": {
+    "lstm_mae": 27.5492,
+    "xgboost_mae": 15.9433,
+    "better_model": "XGBoost",
+    "accuracy_diff": 11.6059
+  },
+  "CHCL": {
+    "lstm_mae": 22.2957,
+    "xgboost_mae": 66.425,
+    "better_model": "LSTM",
+    "accuracy_diff": 44.1293
+  },
+  "UPPER": {
+    "lstm_mae": 16.6262,
+    "xgboost_mae": 25.9859,
+    "better_model": "LSTM",
+    "accuracy_diff": 9.3597
+  },
+  "NHPC": {
+    "lstm_mae": 22.3877,
+    "xgboost_mae": 55.6516,
+    "better_model": "LSTM",
+    "accuracy_diff": 33.2638
+  },
+  "API": {
+    "lstm_mae": 45.6274,
+    "xgboost_mae": 85.6947,
+    "better_model": "LSTM",
+    "accuracy_diff": 40.0674
+  },
+  "SHPC": {
+    "lstm_mae": 51.0755,
+    "xgboost_mae": 79.1612,
+    "better_model": "LSTM",
+    "accuracy_diff": 28.0857
+  },
+  "GUFL": {
+    "lstm_mae": 67.4412,
+    "xgboost_mae": 174.2879,
+    "better_model": "LSTM",
+    "accuracy_diff": 106.8467
+  },
+  "GFCL": {
+    "lstm_mae": 140.4178,
+    "xgboost_mae": 260.6635,
+    "better_model": "LSTM",
+    "accuracy_diff": 120.2457
+  },
+  "NLIC": {
+    "lstm_mae": 47.2259,
+    "xgboost_mae": 59.8253,
+    "better_model": "LSTM",
+    "accuracy_diff": 12.5993
+  },
+  "SICL": {
+    "lstm_mae": 101.2755,
+    "xgboost_mae": 113.9345,
+    "better_model": "LSTM",
+    "accuracy_diff": 12.659
+  },
+  "HGI": {
+    "lstm_mae": 60.8149,
+    "xgboost_mae": 336.418,
+    "better_model": "LSTM",
+    "accuracy_diff": 275.6031
+  },
+  "OHL": {
+    "lstm_mae": 66.4875,
+    "xgboost_mae": 47.4774,
+    "better_model": "XGBoost",
+    "accuracy_diff": 19.0101
+  },
+  "SHL": {
+    "lstm_mae": 135.2473,
+    "xgboost_mae": 66.5111,
+    "better_model": "XGBoost",
+    "accuracy_diff": 68.7361
+  },
+  "UNL": {
+    "lstm_mae": 8651.329,
+    "xgboost_mae": 1536.9785,
+    "better_model": "XGBoost",
+    "accuracy_diff": 7114.3505
+  }
+}
