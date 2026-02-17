@@ -118,6 +118,114 @@ def build_ensemble(lstm_data, xgb_data):
     return ensemble
 
 
+def export_history_json():
+    base_dir = os.path.dirname(__file__)
+    data_dir = os.path.join(base_dir, "data")
+    web_data_dir = os.path.join(base_dir, "..", "web", "data")
+    output_path = os.path.join(web_data_dir, "history.json")
+
+    history = {
+        "generated_at": datetime.now().isoformat(timespec="seconds"),
+        "symbols": {}
+    }
+
+    lstm_csv = os.path.join(base_dir, "predictions", "lstm_predictions.csv")
+    xgb_csv = os.path.join(base_dir, "predictions", "xgboost_predictions.csv")
+
+    def load_pred_df(csv_path):
+        if not os.path.exists(csv_path):
+            return None
+        df = pd.read_csv(csv_path)
+        if df.empty:
+            return None
+        if "date" not in df.columns or "symbol" not in df.columns or "predicted_close" not in df.columns:
+            return None
+        df = df.copy()
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+        df = df.dropna(subset=["date", "symbol", "predicted_close"])
+        df = df.sort_values("date")
+        df = df.groupby(["symbol", "date"], as_index=False).tail(1)
+        return df
+
+    def build_pred_map(df):
+        if df is None or df.empty:
+            return {}
+        pred_map = {}
+        for symbol, group in df.groupby("symbol"):
+            pred_map[symbol] = {
+                row["date"].strftime("%Y-%m-%d"): float(row["predicted_close"])
+                for _, row in group.iterrows()
+            }
+        return pred_map
+
+    lstm_map = build_pred_map(load_pred_df(lstm_csv))
+    xgb_map = build_pred_map(load_pred_df(xgb_csv))
+
+    if not os.path.exists(data_dir):
+        print(f"ℹ️  No data directory found at {data_dir}")
+        return
+
+    for filename in os.listdir(data_dir):
+        if not filename.lower().endswith(".csv"):
+            continue
+
+        symbol = os.path.splitext(filename)[0]
+        csv_path = os.path.join(data_dir, filename)
+
+        try:
+            df = pd.read_csv(csv_path)
+            if "date" not in df.columns or "close" not in df.columns:
+                continue
+
+            df["date"] = pd.to_datetime(df["date"], unit="s", errors="coerce")
+            df = df.dropna(subset=["date", "close"])
+            df = df.sort_values("date").tail(120)
+
+            dates = df["date"].dt.strftime("%Y-%m-%d").tolist()
+            history["symbols"][symbol] = {
+                "dates": dates,
+                "close": [round(value, 2) for value in df["close"].tolist()],
+            }
+
+            predicted = {}
+            if lstm_map.get(symbol):
+                predicted["LSTM"] = [
+                    round(lstm_map[symbol].get(day, None), 2) if day in lstm_map[symbol] else None
+                    for day in dates
+                ]
+            if xgb_map.get(symbol):
+                predicted["XGBoost"] = [
+                    round(xgb_map[symbol].get(day, None), 2) if day in xgb_map[symbol] else None
+                    for day in dates
+                ]
+
+            if predicted:
+                if "LSTM" in predicted or "XGBoost" in predicted:
+                    ensemble = []
+                    for idx, day in enumerate(dates):
+                        lstm_val = predicted.get("LSTM", [None] * len(dates))[idx]
+                        xgb_val = predicted.get("XGBoost", [None] * len(dates))[idx]
+                        if lstm_val is not None and xgb_val is not None:
+                            ensemble.append(round((lstm_val + xgb_val) / 2, 2))
+                        elif lstm_val is not None:
+                            ensemble.append(lstm_val)
+                        elif xgb_val is not None:
+                            ensemble.append(xgb_val)
+                        else:
+                            ensemble.append(None)
+                    predicted["Ensemble"] = ensemble
+
+                history["symbols"][symbol]["predicted"] = predicted
+        except Exception as e:
+            print(f"⚠️  Could not process {symbol}: {e}")
+
+    os.makedirs(web_data_dir, exist_ok=True)
+    with open(output_path, "w", encoding="utf-8") as f:
+        json.dump(history, f, indent=2)
+
+    print(f"✅ Wrote {output_path}")
+
+
 def main():
     base_dir = os.path.dirname(__file__)
     lstm_csv = os.path.join(base_dir, "predictions", "lstm_predictions.csv")
@@ -160,6 +268,9 @@ def main():
         print(f"   Including accuracy data for {len(accuracy_data)} stocks")
     else:
         print("   ℹ️  No accuracy data (run backtest_comparison.py to generate)")
+
+    print("📈 Exporting history data for charts...")
+    export_history_json()
 
 
 if __name__ == "__main__":

@@ -1,5 +1,0 @@
-playwright
-pandas
-scikit-learn
-schedule
-joblib

@@ -14,46 +14,203 @@
   </head>
   <body>
     <div class="page">
+      <nav class="top-nav">
+        <div class="nav-left">
+          <div class="logo">
+            <span class="logo-icon">📈</span>
+            <span class="logo-text"> ArthaVed </span>
+          </div>
+          <div class="quick-stats" id="quick-stats">
+            <div class="stat-item">
+              <span class="stat-label">Stocks</span>
+              <span class="stat-value" id="total-stocks">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Bullish</span>
+              <span class="stat-value bullish" id="bullish-count">--</span>
+            </div>
+            <div class="stat-item">
+              <span class="stat-label">Bearish</span>
+              <span class="stat-value bearish" id="bearish-count">--</span>
+            </div>
+          </div>
+        </div>
+        <div class="nav-right">
+          <button class="icon-btn" id="refresh-btn" title="Refresh data">
+            <span class="icon">🔄</span>
+          </button>
+          <button class="icon-btn" id="export-btn" title="Export predictions">
+            <span class="icon">📥</span>
+          </button>
+          <div class="auto-refresh-toggle">
+            <input type="checkbox" id="auto-refresh" />
+            <label for="auto-refresh" title="Auto-refresh every 5 minutes">Auto</label>
+          </div>
+          <button class="theme-toggle" id="theme-toggle" title="Toggle theme">
+            <span class="theme-icon">🌙</span>
+          </button>
+        </div>
+      </nav>
+
       <header class="hero">
         <div class="hero-text">
-          <p class="eyebrow">Nepse ML</p>
-          <h1>Prediction Dashboard</h1>
+          <!--<p class="eyebrow">Machine Learning Dashboard</p> -->
+          <h1>ArthaVed</h1>
           <p class="subtitle">
-            Select a stock to view predicted open, high, low, close and the
-            bullish or bearish signal.
+            Advanced AI-powered stock predictions with LSTM & XGBoost models.
+            Real-time insights for NEPSE market analysis.
           </p>
         </div>
         <div class="hero-panel">
-          <div class="chip">Model</div>
-          <div class="model-toggle" role="tablist" aria-label="Model selection">
-            <button class="toggle active" data-model="LSTM" role="tab">LSTM</button>
-            <button class="toggle" data-model="XGBoost" role="tab">XGBoost</button>
-            <button class="toggle" data-model="Ensemble" role="tab">Ensemble</button>
+          <div class="panel-header">
+            <div class="chip">Model Selection</div>
           </div>
-          <label class="select-label" for="symbol-select">Stock</label>
-          <div class="select-wrap">
-            <select id="symbol-select"></select>
+          <div class="model-toggle" role="tablist" aria-label="Model selection">
+            <button class="toggle active" data-model="LSTM" role="tab">
+              <span class="model-name">LSTM</span>
+              <span class="model-desc">Time Series</span>
+            </button>
+            <button class="toggle" data-model="XGBoost" role="tab">
+              <span class="model-name">XGBoost</span>
+              <span class="model-desc">Gradient Boost</span>
+            </button>
+            <button class="toggle" data-model="Ensemble" role="tab">
+              <span class="model-name">Ensemble</span>
+              <span class="model-desc">Combined</span>
+            </button>
+          </div>
+          
+          <div class="stock-selector">
+            <div class="selector-header">
+              <label class="select-label" for="symbol-select">Stock Symbol</label>
+              <button class="favorite-btn" id="favorite-btn" title="Add to favorites">
+                <span class="icon">⭐</span>
+              </button>
+            </div>
+            <div class="search-wrapper">
+              <input 
+                type="text" 
+                id="stock-search" 
+                class="stock-search" 
+                placeholder="Search stocks..." 
+              />
+              <span class="search-icon">🔍</span>
+            </div>
+            <div class="select-wrap">
+              <select id="symbol-select"></select>
+            </div>
+            <div class="favorites-list" id="favorites-list"></div>
           </div>
         </div>
       </header>
 
       <main class="content">
+        <!-- Market Overview Section -->
+        <section class="market-overview">
+          <div class="overview-card market-status">
+            <div class="card-icon">📊</div>
+            <div class="card-content">
+              <p class="label">Market Status</p>
+              <h3 id="market-status">CLOSED</h3>
+              <p class="muted" id="market-time">Next: Tomorrow 11:00 AM</p>
+            </div>
+          </div>
+          <div class="overview-card">
+            <div class="card-icon">🎯</div>
+            <div class="card-content">
+              <p class="label">Avg. Accuracy</p>
+              <h3 id="avg-accuracy">--</h3>
+              <p class="muted">Last 30 days</p>
+            </div>
+          </div>
+          <div class="overview-card">
+            <div class="card-icon">📈</div>
+            <div class="card-content">
+              <p class="label">Top Gainers</p>
+              <h3 id="top-gainer">--</h3>
+              <p class="muted" id="top-gainer-change">--</p>
+            </div>
+          </div>
+          <div class="overview-card">
+            <div class="card-icon">📉</div>
+            <div class="card-content">
+              <p class="label">Top Losers</p>
+              <h3 id="top-loser">--</h3>
+              <p class="muted" id="top-loser-change">--</p>
+            </div>
+          </div>
+        </section>
+
         <section class="summary">
-          <div class="summary-card">
+          <div class="summary-card signal-card">
             <p class="label">Signal</p>
-            <h2 id="signal-text">--</h2>
+            <div class="signal-badge" id="signal-badge">
+              <span class="signal-icon" id="signal-icon">●</span>
+              <h2 id="signal-text">--</h2>
+            </div>
             <p class="muted" id="signal-desc">--</p>
           </div>
           <div class="summary-card">
-            <p class="label">Predicted Close</p>
+            <div class="card-header">
+              <p class="label">Predicted Close</p>
+              <span class="trend-indicator" id="trend-indicator"></span>
+            </div>
             <h2 id="pred-close">--</h2>
             <p class="muted" id="pred-change">--</p>
           </div>
           <div class="summary-card">
-            <p class="label">Prediction Date</p>
+            <p class="label">Forecast Date</p>
             <h2 id="pred-date">--</h2>
             <p class="muted" id="pred-model">--</p>
           </div>
+        </section>
+
+        <section class="performance-section">
+          <div class="performance-card">
+            <div class="perf-header">
+              <p class="label">Model Performance</p>
+              <span class="updated-badge" id="updated-time">Updated: --</span>
+            </div>
+            <div class="metrics-grid">
+              <div class="perf-metric">
+                <span class="perf-label">Accuracy</span>
+                <span class="perf-value" id="model-accuracy">--</span>
+              </div>
+              <div class="perf-metric">
+                <span class="perf-label">MAE</span>
+                <span class="perf-value" id="model-mae">--</span>
+              </div>
+              <div class="perf-metric">
+                <span class="perf-label">Confidence</span>
+                <span class="perf-value" id="model-confidence">--</span>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="chart-card">
+          <div class="chart-header">
+            <div>
+              <p class="label">Actual vs Predicted</p>
+              <h3 id="chart-title">--</h3>
+            </div>
+            <div class="chart-controls">
+              <div class="timeframe-toggle">
+                <button class="timeframe-btn active" data-days="7">7D</button>
+                <button class="timeframe-btn" data-days="30">30D</button>
+                <button class="timeframe-btn" data-days="60">60D</button>
+              </div>
+              <p class="muted" id="chart-subtitle">--</p>
+            </div>
+          </div>
+          <div class="chart-wrap">
+            <div class="chart-loader" id="chart-loader">
+              <div class="loader-spinner"></div>
+              <p>Loading chart...</p>
+            </div>
+            <canvas id="price-chart" height="280"></canvas>
+          </div>
+          <p class="muted chart-status" id="chart-status"></p>
         </section>
 
         <section class="grid">
@@ -74,16 +231,48 @@
             <h3 id="pred-close-2">--</h3>
           </div>
         </section>
-      </main>
 
-      <footer class="footer">
-        <p>
-          Update the data by running <span class="code">python scripts/export_predictions.py</span>
-          and reload this page.
-        </p>
-      </footer>
+        <!-- Top Stocks Section -->
+        <section class="top-stocks-section">
+          <div class="top-stocks-card">
+            <div class="card-title">
+              <h3>🚀 Top Predicted Gainers</h3>
+              <span class="badge">Top 5</span>
+            </div>
+            <div class="stocks-list" id="top-gainers-list">
+              <div class="stock-item-placeholder">
+                <div class="skeleton"></div>
+              </div>
+            </div>
+          </div>
+          <div class="top-stocks-card">
+            <div class="card-title">
+              <h3>⚠️ Top Predicted Losers</h3>
+              <span class="badge">Top 5</span>
+            </div>
+            <div class="stocks-list" id="top-losers-list">
+              <div class="stock-item-placeholder">
+                <div class="skeleton"></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+<!--
+     <footer class="footer">
+        <div class="footer-content">
+
+          <p>
+            Update data: <span class="code">python scripts/export_predictions.py</span>
+          </p>
+          <p class="footer-meta">
+            <span id="data-status">●</span> Live Data • Last updated: <span id="last-updated">--</span>
+          </p>
+        </div>
+      </footer> -->
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
     <script src="app.js"></script>
   </body>
 </html>

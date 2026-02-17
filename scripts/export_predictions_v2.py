@@ -27,6 +27,7 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 PREDICTIONS_DIR = os.path.join(SCRIPT_DIR, 'predictions')
 WEB_DATA_DIR = os.path.join(SCRIPT_DIR, '..', 'web', 'data')
 WEB_JSON_FILE = os.path.join(WEB_DATA_DIR, 'predictions.json')
+HISTORY_JSON_FILE = os.path.join(WEB_DATA_DIR, 'history.json')
 
 LSTM_CSV = os.path.join(PREDICTIONS_DIR, 'lstm_predictions.csv')
 XGBOOST_CSV = os.path.join(PREDICTIONS_DIR, 'xgboost_predictions.csv')
@@ -91,7 +92,7 @@ def export_to_json():
     if lstm_df is None and xgboost_df is None:
         logger.error("No prediction data available")
         return False
-    
+
     # If only one is available, use that
     if lstm_df is None:
         logger.warning("Using XGBoost predictions only (LSTM not available)")
@@ -113,9 +114,9 @@ def export_to_json():
         )
         has_lstm = True
         has_xgboost = True
-    
+
     logger.info(f"Combined {len(combined_df)} predictions")
-    
+
     # Prepare output structure
     output = {
         'timestamp': datetime.now().isoformat(),
@@ -129,14 +130,14 @@ def export_to_json():
             'total_predictions': len(combined_df)
         }
     }
-    
+
     # Group by symbol
     for symbol in combined_df['symbol'].unique():
         data = combined_df[combined_df['symbol'] == symbol].sort_values('date').iloc[-1]
-        
+
         try:
             today_close = float(data['today_close'])
-            
+
             # Prepare model predictions with fallback values
             if has_lstm:
                 lstm_open = float(data.get('predicted_open_lstm', data.get('predicted_open', 0)))
@@ -145,7 +146,7 @@ def export_to_json():
                 lstm_close = float(data.get('predicted_close_lstm', data.get('predicted_close', 0)))
             else:
                 lstm_open = lstm_high = lstm_low = lstm_close = 0
-            
+
             if has_xgboost:
                 xgb_open = float(data.get('predicted_open_xgb', data.get('predicted_open', 0)))
                 xgb_high = float(data.get('predicted_high_xgb', data.get('predicted_high', 0)))
@@ -153,19 +154,19 @@ def export_to_json():
                 xgb_close = float(data.get('predicted_close_xgb', data.get('predicted_close', 0)))
             else:
                 xgb_open = xgb_high = xgb_low = xgb_close = 0
-            
+
             # Compute ensemble (average)
             ensemble_open = (lstm_open + xgb_open) / 2 if (has_lstm and has_xgboost) else (lstm_open or xgb_open)
             ensemble_high = (lstm_high + xgb_high) / 2 if (has_lstm and has_xgboost) else (lstm_high or xgb_high)
             ensemble_low = (lstm_low + xgb_low) / 2 if (has_lstm and has_xgboost) else (lstm_low or xgb_low)
             ensemble_close = (lstm_close + xgb_close) / 2 if (has_lstm and has_xgboost) else (lstm_close or xgb_close)
-            
+
             # Compute signals using ensemble for primary signal
             signal, change, change_pct = compute_signal(today_close, ensemble_close)
-            
+
             # Get accuracy info for this stock
             accuracy_info = model_accuracy.get(symbol, {})
-            
+
             # Structure for web display
             output['stocks'][symbol] = {
                 'date': str(data['date']),
@@ -178,7 +179,7 @@ def export_to_json():
                 'xgboost_mae': accuracy_info.get('xgboost_mae'),
                 'predictions': {}
             }
-            
+
             # Add model-specific predictions
             if has_lstm:
                 output['stocks'][symbol]['predictions']['LSTM'] = {
@@ -187,7 +188,7 @@ def export_to_json():
                     'low': round(lstm_low, 2),
                     'close': round(lstm_close, 2)
                 }
-            
+
             if has_xgboost:
                 output['stocks'][symbol]['predictions']['XGBoost'] = {
                     'open': round(xgb_open, 2),
@@ -195,7 +196,7 @@ def export_to_json():
                     'low': round(xgb_low, 2),
                     'close': round(xgb_close, 2)
                 }
-            
+
             if has_lstm and has_xgboost:
                 output['stocks'][symbol]['predictions']['Ensemble'] = {
                     'open': round(ensemble_open, 2),
@@ -203,25 +204,132 @@ def export_to_json():
                     'low': round(ensemble_low, 2),
                     'close': round(ensemble_close, 2)
                 }
-            
+
         except Exception as e:
             logger.error(f"Error processing {symbol}: {e}")
             continue
-    
+
     # Write JSON
     try:
         with open(WEB_JSON_FILE, 'w') as f:
             json.dump(output, f, indent=2)
-        
+
         logger.info(f"Successfully exported {len(output['stocks'])} stock predictions to {WEB_JSON_FILE}")
         print(f"\n✅ Export successful!")
         print(f"Total stocks: {len(output['stocks'])}")
         print(f"Models: {', '.join(output['models'])}")
         print(f"Timestamp: {output['timestamp']}")
         return True
-        
+
     except Exception as e:
         logger.error(f"Error writing JSON: {e}")
+        return False
+
+
+def export_history_json():
+    data_dir = os.path.join(SCRIPT_DIR, 'data')
+    history = {
+        'generated_at': datetime.now().isoformat(timespec='seconds'),
+        'symbols': {}
+    }
+
+    lstm_df = load_predictions(LSTM_CSV)
+    xgboost_df = load_predictions(XGBOOST_CSV)
+
+    def normalize_predictions(df):
+        if df is None or df.empty:
+            return None
+        if 'date' not in df.columns or 'symbol' not in df.columns or 'predicted_close' not in df.columns:
+            return None
+        df = df.copy()
+        df['date'] = pd.to_datetime(df['date'], errors='coerce')
+        df = df.dropna(subset=['date', 'symbol', 'predicted_close'])
+        df = df.sort_values('date')
+        df = df.groupby(['symbol', 'date'], as_index=False).tail(1)
+        return df
+
+    lstm_df = normalize_predictions(lstm_df)
+    xgboost_df = normalize_predictions(xgboost_df)
+
+    def build_pred_map(df):
+        if df is None or df.empty:
+            return {}
+        pred_map = {}
+        for symbol, group in df.groupby('symbol'):
+            pred_map[symbol] = {
+                row['date'].strftime('%Y-%m-%d'): float(row['predicted_close'])
+                for _, row in group.iterrows()
+            }
+        return pred_map
+
+    lstm_map = build_pred_map(lstm_df)
+    xgb_map = build_pred_map(xgboost_df)
+
+    if not os.path.exists(data_dir):
+        logger.warning(f"No data directory found at {data_dir}")
+        return False
+
+    for filename in os.listdir(data_dir):
+        if not filename.lower().endswith('.csv'):
+            continue
+
+        symbol = os.path.splitext(filename)[0]
+        csv_path = os.path.join(data_dir, filename)
+
+        try:
+            df = pd.read_csv(csv_path)
+            if 'date' not in df.columns or 'close' not in df.columns:
+                continue
+
+            df['date'] = pd.to_datetime(df['date'], unit='s', errors='coerce')
+            df = df.dropna(subset=['date', 'close'])
+            df = df.sort_values('date').tail(120)
+
+            dates = df['date'].dt.strftime('%Y-%m-%d').tolist()
+            history['symbols'][symbol] = {
+                'dates': dates,
+                'close': [round(value, 2) for value in df['close'].tolist()],
+            }
+
+            predicted = {}
+            if lstm_map.get(symbol):
+                predicted['LSTM'] = [
+                    round(lstm_map[symbol].get(day, None), 2) if day in lstm_map[symbol] else None
+                    for day in dates
+                ]
+            if xgb_map.get(symbol):
+                predicted['XGBoost'] = [
+                    round(xgb_map[symbol].get(day, None), 2) if day in xgb_map[symbol] else None
+                    for day in dates
+                ]
+
+            if predicted:
+                if 'LSTM' in predicted or 'XGBoost' in predicted:
+                    ensemble = []
+                    for idx, day in enumerate(dates):
+                        lstm_val = predicted.get('LSTM', [None] * len(dates))[idx]
+                        xgb_val = predicted.get('XGBoost', [None] * len(dates))[idx]
+                        if lstm_val is not None and xgb_val is not None:
+                            ensemble.append(round((lstm_val + xgb_val) / 2, 2))
+                        elif lstm_val is not None:
+                            ensemble.append(lstm_val)
+                        elif xgb_val is not None:
+                            ensemble.append(xgb_val)
+                        else:
+                            ensemble.append(None)
+                    predicted['Ensemble'] = ensemble
+
+                history['symbols'][symbol]['predicted'] = predicted
+        except Exception as e:
+            logger.warning(f"Could not process {symbol}: {e}")
+
+    try:
+        with open(HISTORY_JSON_FILE, 'w') as f:
+            json.dump(history, f, indent=2)
+        logger.info(f"Successfully exported history data to {HISTORY_JSON_FILE}")
+        return True
+    except Exception as e:
+        logger.error(f"Error writing history JSON: {e}")
         return False
 
 
@@ -232,6 +340,10 @@ def main():
     logger.info("=" * 60)
     
     success = export_to_json()
+
+    if success:
+        logger.info("Exporting history data for charts")
+        export_history_json()
     
     if success:
         logger.info("Export completed successfully")

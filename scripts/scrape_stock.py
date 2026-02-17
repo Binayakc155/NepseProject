@@ -2,6 +2,11 @@ from playwright.sync_api import sync_playwright
 import pandas as pd
 import time
 import os
+import sys
+
+# Fix Windows encoding for emojis
+if sys.platform == 'win32':
+    sys.stdout.reconfigure(encoding='utf-8')
 
 def scrape_stock(symbol):
     """
@@ -13,7 +18,7 @@ def scrape_stock(symbol):
     with sync_playwright() as p:
         # Launch with more realistic browser settings
         browser = p.chromium.launch(
-            headless=True,  # Run in headless mode (faster, no browser window)
+            headless=False,  # Headful mode is more reliable with Cloudflare
             args=[
                 '--disable-blink-features=AutomationControlled',
             ]
@@ -36,59 +41,68 @@ def scrape_stock(symbol):
         """)
         
         url = f"https://nepsealpha.com/trading/chart?symbol={symbol}"
-        page.goto(url, wait_until='networkidle')
+        max_attempts = 3
 
-        print(f"  Waiting for page to load and Cloudflare to resolve...")
-        time.sleep(15)  # Give more time for Cloudflare challenge
+        # Use wait_for_response to capture the API call, with retries for Cloudflare timeouts
+        for attempt in range(1, max_attempts + 1):
+            try:
+                page.goto(url, wait_until='networkidle', timeout=120000)
 
-        # Use wait_for_response to capture the API call
-        try:
-            with page.expect_response(lambda response: "/trading/1/history" in response.url and response.status == 200) as response_info:
-                page.reload()
-                # Wait for response with timeout
-                response = response_info.value
-                print(f"  ✓ Found history API")
-                
-                # Read the response body while page is still open
-                body_text = response.text()
-                print(f"  Response length: {len(body_text)} bytes")
-                
-                # Try to parse
-                json_data = json_module.loads(body_text)
-                print(f"  Response type: {type(json_data)}")
-                
-                if isinstance(json_data, dict):
-                    print(f"  Response keys: {list(json_data.keys())}")
-                    
-                    # TradingView format: separate arrays for each field
-                    t = json_data.get('t', [])  # time
-                    o = json_data.get('o', [])  # open
-                    h = json_data.get('h', [])  # high
-                    l = json_data.get('l', [])  # low
-                    c = json_data.get('c', [])  # close
-                    v = json_data.get('v', [])  # volume
-                    
-                    print(f"  Found {len(t)} timestamps")
-                    
-                    # Zip arrays together row by row
-                    for i in range(len(t)):
-                        data_rows.append({
-                            "date": t[i],
-                            "open": o[i] if i < len(o) else None,
-                            "high": h[i] if i < len(h) else None,
-                            "low": l[i] if i < len(l) else None,
-                            "close": c[i] if i < len(c) else None,
-                            "volume": v[i] if i < len(v) else None
-                        })
-                    
-                    print(f"  Parsed {len(data_rows)} rows")
-                    
-                elif isinstance(json_data, list):
-                    print(f"  Response is list with {len(json_data)} items")
-                    # Handle list format
-                    data = json_data
-        except Exception as e:
-            print(f"  Error capturing response: {type(e).__name__}: {e}")
+                print(f"  Waiting for page to load and Cloudflare to resolve...")
+                time.sleep(25)  # Give more time for Cloudflare challenge
+
+                with page.expect_response(
+                    lambda response: "/trading/1/history" in response.url and response.status == 200,
+                    timeout=120000
+                ) as response_info:
+                    page.reload()
+                    response = response_info.value
+                    print(f"  ✓ Found history API")
+
+                    # Read the response body while page is still open
+                    body_text = response.text()
+                    print(f"  Response length: {len(body_text)} bytes")
+
+                    # Try to parse
+                    json_data = json_module.loads(body_text)
+                    print(f"  Response type: {type(json_data)}")
+
+                    if isinstance(json_data, dict):
+                        print(f"  Response keys: {list(json_data.keys())}")
+
+                        # TradingView format: separate arrays for each field
+                        t = json_data.get('t', [])  # time
+                        o = json_data.get('o', [])  # open
+                        h = json_data.get('h', [])  # high
+                        l = json_data.get('l', [])  # low
+                        c = json_data.get('c', [])  # close
+                        v = json_data.get('v', [])  # volume
+
+                        print(f"  Found {len(t)} timestamps")
+
+                        # Zip arrays together row by row
+                        for i in range(len(t)):
+                            data_rows.append({
+                                "date": t[i],
+                                "open": o[i] if i < len(o) else None,
+                                "high": h[i] if i < len(h) else None,
+                                "low": l[i] if i < len(l) else None,
+                                "close": c[i] if i < len(c) else None,
+                                "volume": v[i] if i < len(v) else None
+                            })
+
+                        print(f"  Parsed {len(data_rows)} rows")
+                        break
+
+                    if isinstance(json_data, list):
+                        print(f"  Response is list with {len(json_data)} items")
+                        # Handle list format
+                        data = json_data
+                        break
+            except Exception as e:
+                print(f"  Attempt {attempt}/{max_attempts} failed: {type(e).__name__}: {e}")
+                if attempt < max_attempts:
+                    time.sleep(5)
         
         context.close()
         browser.close()
