@@ -22,7 +22,7 @@ STOCKS = ['NEPSE', 'NABIL', 'NICA', 'SBI', 'EBL', 'KBL', 'ADBL', 'CHCL', 'UPPER'
 
 def check_stock_data():
     """Check if stock data CSV files exist and are recent."""
-    print("\n📊 STOCK DATA CHECK")
+    print("\n STOCK DATA CHECK")
     print("=" * 50)
     
     all_good = True
@@ -30,7 +30,7 @@ def check_stock_data():
         csv_file = os.path.join(DATA_DIR, f'{stock}.csv')
         
         if not os.path.exists(csv_file):
-            print(f"❌ {stock}: File missing")
+            print(f" {stock}: File missing")
             all_good = False
             continue
         
@@ -41,7 +41,7 @@ def check_stock_data():
             
             # Check if data is recent (within 3 days)
             days_old = (datetime.now() - last_date).days
-            status = "✅" if days_old <= 3 else "⚠️ "
+            status = "" if days_old <= 3 else " "
             
             print(f"{status} {stock}: {row_count} rows, latest: {last_date.date()} ({days_old}d old)")
             
@@ -49,7 +49,7 @@ def check_stock_data():
                 all_good = False
                 
         except Exception as e:
-            print(f"❌ {stock}: Error reading CSV - {e}")
+            print(f" {stock}: Error reading CSV - {e}")
             all_good = False
     
     return all_good
@@ -57,7 +57,7 @@ def check_stock_data():
 
 def check_prediction_files():
     """Check if prediction files exist and are recent."""
-    print("\n🤖 PREDICTION FILES CHECK")
+    print("\n PREDICTION FILES CHECK")
     print("=" * 50)
     
     files = {
@@ -68,7 +68,7 @@ def check_prediction_files():
     all_good = True
     for model, filepath in files.items():
         if not os.path.exists(filepath):
-            print(f"❌ {model}: File missing")
+            print(f" {model}: File missing")
             all_good = False
             continue
         
@@ -77,7 +77,7 @@ def check_prediction_files():
             mtime = datetime.fromtimestamp(os.path.getmtime(filepath))
             hours_old = (datetime.now() - mtime).total_seconds() / 3600
             
-            status = "✅" if hours_old <= 24 else "⚠️ "
+            status = "" if hours_old <= 24 else " "
             print(f"{status} {model}: {size_mb:.2f} MB, {hours_old:.1f}h old")
             
             # Check file has data
@@ -88,7 +88,7 @@ def check_prediction_files():
                 all_good = False
                 
         except Exception as e:
-            print(f"❌ {model}: Error - {e}")
+            print(f" {model}: Error - {e}")
             all_good = False
     
     return all_good
@@ -96,11 +96,11 @@ def check_prediction_files():
 
 def check_web_json():
     """Check if web JSON is up to date."""
-    print("\n🌐 WEB INTERFACE CHECK")
+    print("\n WEB INTERFACE CHECK")
     print("=" * 50)
     
     if not os.path.exists(WEB_JSON_FILE):
-        print(f"❌ Web JSON missing: {WEB_JSON_FILE}")
+        print(f" Web JSON missing: {WEB_JSON_FILE}")
         return False
     
     try:
@@ -109,7 +109,7 @@ def check_web_json():
         
         timestamp = datetime.fromisoformat(data['timestamp'])
         hours_old = (datetime.now() - timestamp).total_seconds() / 3600
-        status = "✅" if hours_old <= 24 else "⚠️ "
+        status = " " if hours_old <= 24 else " "
         
         print(f"{status} JSON exported {hours_old:.1f}h ago")
         print(f"   → Models: {', '.join(data['models'])}")
@@ -120,26 +120,26 @@ def check_web_json():
         for symbol in sorted(data['stocks'].keys())[:5]:
             info = data['stocks'][symbol]
             signal = info['signal'].upper()
-            emoji = "📈" if signal == "BULLISH" else "📉" if signal == "BEARISH" else "➡️ "
+            emoji = " " if signal == "BULLISH" else " " if signal == "BEARISH" else " "
             change = info['change_pct']
             print(f"   {emoji} {symbol}: {signal} ({change:+.1f}%)")
         
         return True
         
     except Exception as e:
-        print(f"❌ Error reading JSON: {e}")
+        print(f" Error reading JSON: {e}")
         return False
 
 
 def check_auto_update_log():
     """Check auto_update.py log."""
-    print("\n🔄 AUTO-UPDATE STATUS")
+    print("\n AUTO-UPDATE STATUS")
     print("=" * 50)
     
     log_file = os.path.join(SCRIPT_DIR, 'auto_update.log')
     
     if not os.path.exists(log_file):
-        print("ℹ️  Auto-update not running (no log found)")
+        print("  Auto-update not running (no log found)")
         return None
     
     try:
@@ -153,19 +153,19 @@ def check_auto_update_log():
         return True
         
     except Exception as e:
-        print(f"⚠️  Could not read log: {e}")
+        print(f"  Could not read log: {e}")
         return None
 
 
 def check_export_log():
     """Check export_predictions log."""
-    print("\n💾 EXPORT LOG")
+    print("\n EXPORT LOG")
     print("=" * 50)
     
     log_file = os.path.join(SCRIPT_DIR, 'export_predictions.log')
     
     if not os.path.exists(log_file):
-        print("ℹ️  No export log found")
+        print("ℹ  No export log found")
         return None
     
     try:
@@ -180,7 +180,7 @@ def check_export_log():
         return True
         
     except Exception as e:
-        print(f"⚠️  Could not read log: {e}")
+        print(f"  Could not read log: {e}")
         return None
 
 
@@ -208,7 +208,7 @@ def provide_recommendations():
         issues.append("Web interface data is missing")
     
     if issues:
-        print("\n🔧 ACTIONS TO TAKE:\n")
+        print("\n ACTIONS TO TAKE:\n")
         
         if "Stock data is stale" in str(issues):
             print("1. Scrape new stock data:")
@@ -226,9 +226,9 @@ def provide_recommendations():
         print("Or run all at once:")
         print("   python run_all.py\n")
     else:
-        print("✅ Everything looks good!")
-        print("\n📊 Pipeline is healthy and ready to use.")
-        print("🌐 Web dashboard should display current predictions.")
+        print(" Everything looks good!")
+        print("\n Pipeline is healthy and ready to use.")
+        print(" Web dashboard should display current predictions.")
 
 
 def main():
