@@ -75,6 +75,44 @@ function formatPct(value) {
   return `${value.toFixed(2)}%`;
 }
 
+// Nepal Stock Exchange circuit breaker: ±10% daily cap
+const CIRCUIT_CAP = 10;
+
+function clampChangePct(changePct) {
+  // Clamp change_pct to ±10%
+  return Math.max(-CIRCUIT_CAP, Math.min(CIRCUIT_CAP, changePct));
+}
+
+function applyCircuitBreaker(item) {
+  if (!item || !item.today_close) {
+    return item;
+  }
+  
+  const today_close = item.today_close;
+  const upper_limit = today_close * (1 + CIRCUIT_CAP / 100);
+  const lower_limit = today_close * (1 - CIRCUIT_CAP / 100);
+  
+  // Cap predicted OHLC
+  const capped_open = Math.min(upper_limit, Math.max(lower_limit, item.predicted_open));
+  const capped_high = Math.min(upper_limit, Math.max(lower_limit, item.predicted_high));
+  const capped_low = Math.min(upper_limit, Math.max(lower_limit, item.predicted_low));
+  const capped_close = Math.min(upper_limit, Math.max(lower_limit, item.predicted_close));
+  
+  // Recompute change
+  const change = capped_close - today_close;
+  const change_pct = (change / today_close) * 100;
+  
+  return {
+    ...item,
+    predicted_open: capped_open,
+    predicted_high: capped_high,
+    predicted_low: capped_low,
+    predicted_close: capped_close,
+    change: change,
+    change_pct: change_pct,
+  };
+}
+
 function getSignal(changePct) {
   if (changePct === null || Number.isNaN(changePct)) {
     return { text: "No signal", desc: "Prediction data unavailable.", type: "neutral" };
@@ -118,14 +156,17 @@ function updateUI() {
 
   const changePct = item.change_pct;
   const signal = getSignal(changePct);
+  
+  // Apply circuit breaker cap (±10% daily limit for Nepal Stock Exchange)
+  const cappedItem = applyCircuitBreaker(item);
 
-  // Update prediction values
-  elements.predOpen.textContent = formatValue(item.predicted_open);
-  elements.predHigh.textContent = formatValue(item.predicted_high);
-  elements.predLow.textContent = formatValue(item.predicted_low);
-  elements.predClose.textContent = formatValue(item.predicted_close);
-  elements.predClose2.textContent = formatValue(item.predicted_close);
-  elements.predChange.textContent = `Change: ${formatValue(item.change)} (${formatPct(changePct)})`;
+  // Update prediction values with capped prices
+  elements.predOpen.textContent = formatValue(cappedItem.predicted_open);
+  elements.predHigh.textContent = formatValue(cappedItem.predicted_high);
+  elements.predLow.textContent = formatValue(cappedItem.predicted_low);
+  elements.predClose.textContent = formatValue(cappedItem.predicted_close);
+  elements.predClose2.textContent = formatValue(cappedItem.predicted_close);
+  elements.predChange.textContent = `Change: ${formatValue(cappedItem.change)} (${formatPct(cappedItem.change_pct)})`;
   
   // Update date
   const forecastDate = item.date ? new Date(item.date + "T00:00:00") : null;
@@ -155,17 +196,17 @@ function updateUI() {
   }
   
   // Update performance metrics
-  updatePerformanceMetrics(item);
+  updatePerformanceMetrics(cappedItem);
   
   // Update model button badges to show recommended model
-  updateModelBadges(item);
+  updateModelBadges(cappedItem);
   
   // Update quick stats and overview
   updateQuickStats();
   updateMarketOverview();
   updateTopStocks();
 
-  updateChart(item);
+  updateChart(cappedItem);
 }
 
 function getPredictionItem(model, symbol) {
@@ -631,15 +672,16 @@ function updateMarketOverview() {
     
     const item = getPredictionItem(state.model, symbol);
     if (item && item.change_pct !== null && !isNaN(item.change_pct)) {
-      if (item.change_pct > maxChange) {
-        maxChange = item.change_pct;
+      const capped_pct = clampChangePct(item.change_pct);
+      if (capped_pct > maxChange) {
+        maxChange = capped_pct;
         topGainerSym = symbol;
-        topGainerVal = item.change_pct;
+        topGainerVal = capped_pct;
       }
-      if (item.change_pct < minChange) {
-        minChange = item.change_pct;
+      if (capped_pct < minChange) {
+        minChange = capped_pct;
         topLoserSym = symbol;
-        topLoserVal = item.change_pct;
+        topLoserVal = capped_pct;
       }
     }
   });
@@ -665,9 +707,10 @@ function updateTopStocks() {
     
     const item = getPredictionItem(state.model, symbol);
     if (item && item.change_pct !== null && !isNaN(item.change_pct)) {
+      const capped_pct = clampChangePct(item.change_pct);
       stocksWithChanges.push({
         symbol,
-        changePct: item.change_pct,
+        changePct: capped_pct,
         predictedClose: item.predicted_close,
         model: state.model,
       });
