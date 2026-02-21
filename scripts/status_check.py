@@ -165,7 +165,7 @@ def check_export_log():
     log_file = os.path.join(SCRIPT_DIR, 'export_predictions.log')
     
     if not os.path.exists(log_file):
-        print("ℹ  No export log found")
+        print("No export log found")
         return None
     
     try:
@@ -186,7 +186,7 @@ def check_export_log():
 
 def provide_recommendations():
     """Provide actionable recommendations."""
-    print("\n💡 RECOMMENDATIONS")
+    print("\nRECOMMENDATIONS")
     print("=" * 50)
     
     issues = []

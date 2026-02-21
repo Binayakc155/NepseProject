@@ -215,7 +215,7 @@ def export_to_json():
             json.dump(output, f, indent=2)
 
         logger.info(f"Successfully exported {len(output['stocks'])} stock predictions to {WEB_JSON_FILE}")
-        print(f"\n✅ Export successful!")
+        print(f"\nExport successful!")
         print(f"Total stocks: {len(output['stocks'])}")
         print(f"Models: {', '.join(output['models'])}")
         print(f"Timestamp: {output['timestamp']}")

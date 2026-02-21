@@ -65,27 +65,27 @@ def train_and_predict(symbol, epochs=50, batch_size=32):
     # Load data
     csv_path = f"data/{symbol}.csv"
     if not os.path.exists(csv_path):
-        print(f"❌ Data file not found: {csv_path}")
+        print(f"Data file not found: {csv_path}")
         return None
     
     df = pd.read_csv(csv_path)
-    print(f"✓ Loaded {len(df)} days of data")
+    print(f"Loaded {len(df)} days of data")
     
     # Prepare data
     X, y, scaler = prepare_data(df, WINDOW_SIZE)
-    print(f"✓ Prepared {len(X)} training sequences")
+    print(f"Prepared {len(X)} training sequences")
     
     # Split into train and test
     train_size = int(len(X) * 0.8)
     X_train, X_test = X[:train_size], X[train_size:]
     y_train, y_test = y[:train_size], y[train_size:]
     
-    print(f"✓ Training set: {len(X_train)} samples")
-    print(f"✓ Test set: {len(X_test)} samples")
+    print(f"Training set: {len(X_train)} samples")
+    print(f"Test set: {len(X_test)} samples")
     
     # Build and train model
     model = build_lstm_model((X.shape[1], X.shape[2]))
-    print(f"\n📊 Training LSTM model...")
+    print(f"\nTraining LSTM model...")
     
     history = model.fit(
         X_train, y_train,
@@ -97,8 +97,8 @@ def train_and_predict(symbol, epochs=50, batch_size=32):
     
     # Evaluate
     test_loss, test_mae = model.evaluate(X_test, y_test, verbose=0)
-    print(f"\n✓ Test Loss: {test_loss:.6f}")
-    print(f"✓ Test MAE: {test_mae:.6f}")
+    print(f"\nTest Loss: {test_loss:.6f}")
+    print(f"Test MAE: {test_mae:.6f}")
     
     # Predict tomorrow
     last_sequence = X[-1].reshape(1, WINDOW_SIZE, 4)
@@ -110,7 +110,7 @@ def train_and_predict(symbol, epochs=50, batch_size=32):
     
     # Display predictions
     print(f"\n{'='*60}")
-    print(f"📅 TOMORROW'S PREDICTION for {symbol}")
+    print(f"TOMORROW'S PREDICTION for {symbol}")
     print(f"{'='*60}")
     print(f"Today's Close:      Rs. {today['close']:.2f}")
     print(f"\nPredicted Tomorrow:")
@@ -125,11 +125,11 @@ def train_and_predict(symbol, epochs=50, batch_size=32):
     print(f"\nExpected Change:    Rs. {change:+.2f} ({change_pct:+.2f}%)")
     
     if change > 0:
-        print(f"Trend: 📈 BULLISH")
+        print(f"Trend: BULLISH")
     elif change < 0:
-        print(f"Trend: 📉 BEARISH")
+        print(f"Trend: BEARISH")
     else:
-        print(f"Trend: ➡️ NEUTRAL")
+        print(f"Trend: NEUTRAL")
     
     print(f"{'='*60}\n")
     
@@ -173,7 +173,7 @@ def save_prediction(symbol, prediction, today_close):
         preds_df = pd.DataFrame([new_row])
     
     preds_df.to_csv(pred_file, index=False)
-    print(f"✓ Prediction saved to {pred_file}")
+    print(f"Prediction saved to {pred_file}")
 
 if __name__ == "__main__":
     # Diverse stocks from different sectors
@@ -195,7 +195,7 @@ if __name__ == "__main__":
     ]
     
     print(f"\n{'='*60}")
-    print(f"🧠 LSTM Predictions for {len(symbols)} stocks")
+    print(f"LSTM Predictions for {len(symbols)} stocks")
     print(f"{'='*60}\n")
     
     results = []
@@ -206,12 +206,12 @@ if __name__ == "__main__":
             if result:
                 results.append(result)
         except Exception as e:
-            print(f"❌ Error predicting {symbol}: {e}")
+            print(f"Error predicting {symbol}: {e}")
     
     # Summary
     if results:
         print(f"\n{'='*60}")
-        print(f"📊 PREDICTION SUMMARY")
+        print(f"PREDICTION SUMMARY")
         print(f"{'='*60}")
         for r in results:
             print(f"{r['symbol']:8} | Close: Rs. {r['predicted_close']:8.2f} | Change: {r['change']:+7.2f} ({r['change_pct']:+6.2f}%)")

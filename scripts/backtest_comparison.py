@@ -6,7 +6,6 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import LSTM, Dense, Dropout
 from tensorflow.keras.optimizers import Adam
 from xgboost import XGBRegressor
-from sklearn.model_selection import train_test_split
 import os
 import json
 
@@ -19,7 +18,7 @@ def backtest_lstm_vs_xgboost(symbol, test_days=30):
     """
     
     print(f"\n{'='*70}")
-    print(f"📊 BACKTESTING {symbol} - Last {test_days} days")
+    print(f"BACKTESTING {symbol} - Last {test_days} days")
     print(f"{'='*70}\n")
     
     # Load data
@@ -36,7 +35,7 @@ def backtest_lstm_vs_xgboost(symbol, test_days=30):
     print(f"Testing data: {len(df_test)} days")
     
     # =================== LSTM BACKTEST ===================
-    print(f"\n🧠 LSTM Backtest...")
+    print(f"\nLSTM Backtest...")
     
     # Prepare LSTM data
     data = df_train[['open', 'high', 'low', 'close']].values
@@ -84,7 +83,7 @@ def backtest_lstm_vs_xgboost(symbol, test_days=30):
     lstm_predictions = np.array(lstm_predictions)
     
     # =================== XGBOOST BACKTEST ===================
-    print(f"🌲 XGBoost Backtest...")
+    print(f"XGBoost Backtest...")
     
     # Prepare XGBoost data
     features_df = df_train[['open', 'high', 'low', 'close', 'volume']].copy()
@@ -144,7 +143,7 @@ def backtest_lstm_vs_xgboost(symbol, test_days=30):
     actual_values = df_test[['open', 'high', 'low', 'close']].values
     
     print(f"\n{'='*70}")
-    print(f"📈 ACCURACY COMPARISON (MAE - Lower is Better)")
+    print(f"ACCURACY COMPARISON (MAE - Lower is Better)")
     print(f"{'='*70}\n")
     
     columns = ['Open', 'High', 'Low', 'Close']
@@ -163,7 +162,7 @@ def backtest_lstm_vs_xgboost(symbol, test_days=30):
         results['LSTM'][col_name] = {'MAE': lstm_mae, 'RMSE': lstm_rmse}
         results['XGBoost'][col_name] = {'MAE': xgb_mae, 'RMSE': xgb_rmse}
         
-        winner = "🏆 LSTM" if lstm_mae < xgb_mae else "🏆 XGBoost"
+        winner = "LSTM WINS" if lstm_mae < xgb_mae else "XGBOOST WINS"
         
         print(f"{col_name:8}")
         print(f"  LSTM:    MAE={lstm_mae:8.4f}  RMSE={lstm_rmse:8.4f}")
@@ -175,12 +174,12 @@ def backtest_lstm_vs_xgboost(symbol, test_days=30):
     xgb_total_mae = sum([results['XGBoost'][col]['MAE'] for col in columns])
     
     print(f"{'='*70}")
-    print(f"🎯 OVERALL WINNER:")
+    print(f"OVERALL WINNER:")
     if lstm_total_mae < xgb_total_mae:
-        print(f"   ✓ LSTM is more accurate (Total MAE: {lstm_total_mae:.4f})")
+        print(f"   LSTM is more accurate (Total MAE: {lstm_total_mae:.4f})")
         print(f"     Use LSTM predictions for {symbol}")
     else:
-        print(f"   ✓ XGBoost is more accurate (Total MAE: {xgb_total_mae:.4f})")
+        print(f"   XGBoost is more accurate (Total MAE: {xgb_total_mae:.4f})")
         print(f"     Use XGBoost predictions for {symbol}")
     print(f"{'='*70}\n")
     
@@ -217,13 +216,13 @@ if __name__ == "__main__":
             result = backtest_lstm_vs_xgboost(symbol, test_days=30)
             summary.append(result)
         except Exception as e:
-            print(f"❌ Error backtesting {symbol}: {e}")
+            print(f"Error backtesting {symbol}: {e}")
             import traceback
             traceback.print_exc()
     
     if summary:
         print(f"\n{'='*70}")
-        print(f"📊 FINAL RECOMMENDATION")
+        print(f"FINAL RECOMMENDATION")
         print(f"{'='*70}\n")
         for s in summary:
             print(f"{s['symbol']:8} → Use {s['winner']}")
@@ -247,5 +246,5 @@ if __name__ == "__main__":
         with open(accuracy_file, 'w') as f:
             json.dump(accuracy_data, f, indent=2)
         
-        print(f"💾 Saved accuracy data to: {accuracy_file}")
+        print(f"Saved accuracy data to: {accuracy_file}")
         print(f"   Run 'python export_predictions.py' to update dashboard\n")

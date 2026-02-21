@@ -16,10 +16,10 @@ for file_name in files_to_check:
         try:
             df = pd.read_csv(file_path)
             if df.empty:
-                print(f"{file_name} ❌ exists but EMPTY")
+                print(f"{file_name} exists but EMPTY")
             else:
-                print(f"{file_name} ✅ exists, rows: {len(df)}")
+                print(f"{file_name} exists, rows: {len(df)}")
         except pd.errors.EmptyDataError:
-            print(f"{file_name} ❌ exists but EMPTY or invalid format")
+            print(f"{file_name} exists but EMPTY or invalid format")
     else:
-        print(f"{file_name} ❌ NOT found")
+        print(f"{file_name} NOT found")

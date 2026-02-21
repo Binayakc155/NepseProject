@@ -57,7 +57,7 @@ def scrape_stock(symbol):
                 ) as response_info:
                     page.reload()
                     response = response_info.value
-                    print(f"  ✓ Found history API")
+                    print(f"  Found history API")
 
                     # Read the response body while page is still open
                     body_text = response.text()
@@ -147,7 +147,7 @@ if __name__ == "__main__":
     ]
     
     print(f"\n{'='*60}")
-    print(f"📊 Scraping {len(symbols)} stocks from different sectors")
+    print(f"Scraping {len(symbols)} stocks from different sectors")
     print(f"{'='*60}\n")
     
     for i, symbol in enumerate(symbols, 1):
@@ -155,4 +155,4 @@ if __name__ == "__main__":
         try:
             scrape_stock(symbol)
         except Exception as e:
-            print(f"❌ Error scraping {symbol}: {e}")
+            print(f"Error scraping {symbol}: {e}")

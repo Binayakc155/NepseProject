@@ -10,11 +10,11 @@ def compare_predictions():
     xgboost_file = "predictions/xgboost_predictions.csv"
     
     if not os.path.exists(lstm_file):
-        print("❌ LSTM predictions not found. Run: python lstm_predict.py")
+        print("LSTM predictions not found. Run: python lstm_predict.py")
         return
     
     if not os.path.exists(xgboost_file):
-        print("❌ XGBoost predictions not found. Run: python xgboost_predict.py")
+        print("XGBoost predictions not found. Run: python xgboost_predict.py")
         return
     
     # Load predictions
@@ -22,7 +22,7 @@ def compare_predictions():
     xgboost_df = pd.read_csv(xgboost_file)
     
     print(f"\n{'='*100}")
-    print(f"🎯 LSTM vs XGBOOST PREDICTION COMPARISON")
+    print(f"LSTM vs XGBOOST PREDICTION COMPARISON")
     print(f"{'='*100}\n")
     
     # Compare for each stock
@@ -32,7 +32,7 @@ def compare_predictions():
         lstm_row = lstm_df[lstm_df['symbol'] == symbol].iloc[-1]
         xgb_row = xgboost_df[xgboost_df['symbol'] == symbol].iloc[-1]
         
-        print(f"\n📊 {symbol} - Tomorrow's Prediction")
+        print(f"\nComparison for {symbol} - Tomorrow's Prediction")
         print(f"{'-'*100}")
         
         print(f"{'Metric':<15} {'Today Close':<15} {'LSTM Predict':<18} {'XGBoost Predict':<18} {'Difference':<15}")
@@ -74,30 +74,30 @@ def compare_predictions():
         print(f"\n{'Change %':<15} {'-':<15} {lstm_change_pct:+17.2f}% {xgb_change_pct:+17.2f}%")
         
         # Determine trends
-        lstm_trend = "📈 BULLISH" if lstm_change_pct > 0 else "📉 BEARISH" if lstm_change_pct < 0 else "➡️ NEUTRAL"
-        xgb_trend = "📈 BULLISH" if xgb_change_pct > 0 else "📉 BEARISH" if xgb_change_pct < 0 else "➡️ NEUTRAL"
+        lstm_trend = "BULLISH" if lstm_change_pct > 0 else "BEARISH" if lstm_change_pct < 0 else "NEUTRAL"
+        xgb_trend = "BULLISH" if xgb_change_pct > 0 else "BEARISH" if xgb_change_pct < 0 else "NEUTRAL"
         
         print(f"{'Trend':<15} {'-':<15} {lstm_trend:<18} {xgb_trend:<18}")
         
         # Recommendation
-        print(f"\n💡 Recommendation:")
+        print(f"\nRecommendation:")
         if lstm_trend == xgb_trend:
-            print(f"   ✓ BOTH agree: {lstm_trend}")
+            print(f"   BOTH agree: {lstm_trend}")
         else:
-            print(f"   ⚠️  DISAGREEMENT: LSTM says {lstm_trend}, XGBoost says {xgb_trend}")
+            print(f"   DISAGREEMENT: LSTM says {lstm_trend}, XGBoost says {xgb_trend}")
         
         # Average prediction (ensemble)
         ensemble_close = (lstm_close + xgb_close) / 2
         ensemble_change_pct = ((ensemble_close - today_close) / today_close) * 100
-        ensemble_trend = "📈 BULLISH" if ensemble_change_pct > 0 else "📉 BEARISH" if ensemble_change_pct < 0 else "➡️ NEUTRAL"
+        ensemble_trend = "BULLISH" if ensemble_change_pct > 0 else "BEARISH" if ensemble_change_pct < 0 else "NEUTRAL"
         
-        print(f"\n🎯 ENSEMBLE (Average):")
+        print(f"\nENSEMBLE (Average):")
         print(f"   Close Price:    Rs. {ensemble_close:.2f}")
         print(f"   Change:         {ensemble_change_pct:+.2f}%")
         print(f"   Trend:          {ensemble_trend}")
     
     print(f"\n{'='*100}")
-    print(f"💾 Predictions saved:")
+    print(f"Predictions saved:")
     print(f"   - LSTM:    {lstm_file}")
     print(f"   - XGBoost: {xgboost_file}")
     print(f"{'='*100}\n")

@@ -44,7 +44,7 @@ def load_model_accuracy():
     accuracy_file = os.path.join(base_dir, "predictions", "model_accuracy.json")
     
     if not os.path.exists(accuracy_file):
-        print(f"ℹ️  No accuracy file found at {accuracy_file}")
+        print(f"No accuracy file found at {accuracy_file}")
         print("   Run 'python backtest_comparison.py' to generate accuracy data.")
         return {}
     
@@ -52,7 +52,7 @@ def load_model_accuracy():
         with open(accuracy_file, 'r') as f:
             return json.load(f)
     except Exception as e:
-        print(f"⚠️  Could not load accuracy data: {e}")
+        print(f"Could not load accuracy data: {e}")
         return {}
 
 
@@ -162,7 +162,7 @@ def export_history_json():
     xgb_map = build_pred_map(load_pred_df(xgb_csv))
 
     if not os.path.exists(data_dir):
-        print(f"ℹ️  No data directory found at {data_dir}")
+        print(f"No data directory found at {data_dir}")
         return
 
     for filename in os.listdir(data_dir):
@@ -217,13 +217,13 @@ def export_history_json():
 
                 history["symbols"][symbol]["predicted"] = predicted
         except Exception as e:
-            print(f"⚠️  Could not process {symbol}: {e}")
+            print(f"Could not process {symbol}: {e}")
 
     os.makedirs(web_data_dir, exist_ok=True)
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(history, f, indent=2)
 
-    print(f"✅ Wrote {output_path}")
+    print(f"Wrote {output_path}")
 
 
 def main():
@@ -231,15 +231,15 @@ def main():
     lstm_csv = os.path.join(base_dir, "predictions", "lstm_predictions.csv")
     xgb_csv = os.path.join(base_dir, "predictions", "xgboost_predictions.csv")
 
-    print("📊 Loading predictions...")
+    print("Loading predictions...")
     lstm_data = load_latest_predictions(lstm_csv, "LSTM")
     xgb_data = load_latest_predictions(xgb_csv, "XGBoost")
     ensemble = build_ensemble(lstm_data, xgb_data)
 
-    print("🎯 Loading model accuracy data...")
+    print("Loading model accuracy data...")
     accuracy_data = load_model_accuracy()
 
-    print("⭐ Adding accuracy recommendations...")
+    print("Adding accuracy recommendations...")
     lstm_data = add_accuracy_info(lstm_data, accuracy_data)
     xgb_data = add_accuracy_info(xgb_data, accuracy_data)
     ensemble = add_accuracy_info(ensemble, accuracy_data)
@@ -263,13 +263,13 @@ def main():
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(output, f, indent=2)
 
-    print(f"✅ Wrote {output_path}")
+    print(f"Wrote {output_path}")
     if accuracy_data:
         print(f"   Including accuracy data for {len(accuracy_data)} stocks")
     else:
-        print("   ℹ️  No accuracy data (run backtest_comparison.py to generate)")
+        print("   No accuracy data (run backtest_comparison.py to generate)")
 
-    print("📈 Exporting history data for charts...")
+    print("Exporting history data for charts...")
     export_history_json()
 
 

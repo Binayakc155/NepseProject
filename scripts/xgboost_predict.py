@@ -1,10 +1,8 @@
 import pandas as pd
 import numpy as np
-from sklearn.preprocessing import MinMaxScaler
 from xgboost import XGBRegressor
 from sklearn.model_selection import train_test_split
 import os
-import json
 
 # Window size for features
 WINDOW_SIZE = 60
@@ -39,22 +37,22 @@ def train_and_predict_xgboost(symbol, epochs=100):
     Train XGBoost and predict tomorrow's prices
     """
     print(f"\n{'='*60}")
-    print(f"🚀 XGBoost Prediction for {symbol}")
+    print(f"XGBoost Prediction for {symbol}")
     print(f"{'='*60}")
     
     # Load data
     csv_path = f"data/{symbol}.csv"
     if not os.path.exists(csv_path):
-        print(f"❌ Data file not found: {csv_path}")
+        print(f"Data file not found: {csv_path}")
         return None
     
     df = pd.read_csv(csv_path)
     df['date'] = pd.to_datetime(df['date'], unit='s')
-    print(f"✓ Loaded {len(df)} days of data")
+    print(f"Loaded {len(df)} days of data")
     
     # Create features
     features_df = create_features(df, WINDOW_SIZE)
-    print(f"✓ Created features for {len(features_df)} samples")
+    print(f"Created features for {len(features_df)} samples")
     
     # Separate features and targets
     target_cols = ['target_open', 'target_high', 'target_low', 'target_close']
@@ -80,10 +78,10 @@ def train_and_predict_xgboost(symbol, epochs=100):
         X, y_close, test_size=0.2, random_state=42
     )
     
-    print(f"✓ Training set: {len(X_train)} | Test set: {len(X_test)}")
+    print(f"Training set: {len(X_train)} | Test set: {len(X_test)}")
     
     # Train separate models for each target
-    print(f"\n📊 Training XGBoost models...")
+    print(f"\nTraining XGBoost models...")
     
     models = {}
     mae_scores = {}
@@ -128,7 +126,7 @@ def train_and_predict_xgboost(symbol, epochs=100):
     
     # Display predictions
     print(f"\n{'='*60}")
-    print(f"📅 TOMORROW'S XGBOOST PREDICTION for {symbol}")
+    print(f"TOMORROW'S XGBOOST PREDICTION for {symbol}")
     print(f"{'='*60}")
     print(f"Today's Close:      {today['close']:.2f}")
     print(f"\nPredicted Tomorrow:")
@@ -143,11 +141,11 @@ def train_and_predict_xgboost(symbol, epochs=100):
     print(f"\nExpected Change:    {change:+.2f} ({change_pct:+.2f}%)")
     
     if change > 0:
-        print(f"Trend: 📈 BULLISH")
+        print(f"Trend: BULLISH")
     elif change < 0:
-        print(f"Trend: 📉 BEARISH")
+        print(f"Trend: BEARISH")
     else:
-        print(f"Trend: ➡️ NEUTRAL")
+        print(f"Trend: NEUTRAL")
     
     print(f"{'='*60}\n")
     
@@ -193,7 +191,7 @@ def save_xgboost_prediction(symbol, pred_open, pred_high, pred_low, pred_close, 
         preds_df = pd.DataFrame([new_row])
     
     preds_df.to_csv(pred_file, index=False)
-    print(f"✓ Prediction saved to {pred_file}")
+    print(f"Prediction saved to {pred_file}")
 
 if __name__ == "__main__":
     # Diverse stocks from different sectors
@@ -215,7 +213,7 @@ if __name__ == "__main__":
     ]
     
     print(f"\n{'='*60}")
-    print(f"🌲 XGBoost Predictions for {len(symbols)} stocks")
+    print(f"XGBoost Predictions for {len(symbols)} stocks")
     print(f"{'='*60}\n")
     
     results = []
@@ -226,14 +224,14 @@ if __name__ == "__main__":
             if result:
                 results.append(result)
         except Exception as e:
-            print(f"❌ Error predicting {symbol}: {e}")
+            print(f"Error predicting {symbol}: {e}")
             import traceback
             traceback.print_exc()
     
     # Summary
     if results:
         print(f"\n{'='*60}")
-        print(f"🎯 XGBOOST PREDICTION SUMMARY")
+        print(f"XGBOOST PREDICTION SUMMARY")
         print(f"{'='*60}")
         for r in results:
             print(f"{r['symbol']:8} | Close: {r['predicted_close']:8.2f} | Change: {r['change']:+7.2f} ({r['change_pct']:+6.2f}%)")

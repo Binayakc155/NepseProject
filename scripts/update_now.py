@@ -9,14 +9,6 @@ import os
 import sys
 import subprocess
 from datetime import datetime
-import logging
-
-# Setup logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(levelname)s - %(message)s'
-)
-logger = logging.getLogger(__name__)
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 
@@ -26,7 +18,7 @@ def run_command(script_name, description):
     script_path = os.path.join(SCRIPT_DIR, script_name)
     
     print(f"\n{'='*60}")
-    print(f"▶️  {description}")
+    print(f"Running: {description}")
     print(f"{'='*60}")
     
     try:
@@ -42,19 +34,19 @@ def run_command(script_name, description):
             print(result.stdout)
         
         if result.returncode == 0:
-            print(f"✅ {description} completed successfully")
+            print(f"{description} completed successfully")
             return True
         else:
-            print(f"❌ {description} failed")
+            print(f"{description} failed")
             if result.stderr:
                 print(f"Error: {result.stderr}")
             return False
             
     except subprocess.TimeoutExpired:
-        print(f"❌ {description} timed out (>10 min)")
+        print(f"{description} timed out (>10 min)")
         return False
     except Exception as e:
-        print(f"❌ Error running {description}: {e}")
+        print(f"Error running {description}: {e}")
         return False
 
 
@@ -81,7 +73,7 @@ def main():
         
         # Stop on first failure
         if not success:
-            print(f"\n⚠️  Pipeline stopped due to failure")
+            print(f"\nPipeline stopped due to failure")
             break
     
     # Summary
@@ -92,21 +84,21 @@ def main():
     all_success = all(results.values())
     
     for description, success in results.items():
-        status = "✅ PASSED" if success else "❌ FAILED"
+        status = "PASSED" if success else "FAILED"
         print(f"{status}: {description}")
     
     elapsed = (datetime.now() - start_time).total_seconds()
-    print(f"\n⏱️  Total time: {elapsed:.0f} seconds ({elapsed/60:.1f} minutes)")
-    print(f"🏁 Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+    print(f"\nTotal time: {elapsed:.0f} seconds ({elapsed/60:.1f} minutes)")
+    print(f"Finished: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
     
     if all_success:
-        print("\n✅ UPDATE SUCCESSFUL!")
-        print("🌐 Web dashboard should now show updated predictions")
-        print("📊 Next automatic update scheduled for tomorrow at 3:10 PM")
+        print("\nUPDATE SUCCESSFUL!")
+        print("Web dashboard should now show updated predictions")
+        print("Next automatic update scheduled for tomorrow at 3:10 PM")
     else:
-        print("\n❌ UPDATE FAILED")
+        print("\nUPDATE FAILED")
         print("Check the error messages above for details")
-        print("💡 Tip: Run 'python status_check.py' for diagnostics")
+        print("Tip: Run 'python status_check.py' for diagnostics")
     
     print("="*60 + "\n")
     
